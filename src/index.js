@@ -1,30 +1,31 @@
 import { Client, GatewayIntentBits, EmbedBuilder } from 'discord.js';
 import DisTube from 'distube';
 import express from "express"
-const token = process.env.token
+import * as dotenv from 'dotenv';
 
-const config = {
-    prefix: '*',
-    token
-}
+dotenv.config();
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent,
     ],
 });
 
-const distube = new DisTube.default(client, {
+const distube = new DisTube(client, {
     searchSongs: 1,
     searchCooldown: 30,
     leaveOnEmpty: true,
     emptyCooldown: 0,
     leaveOnFinish: true,
     leaveOnStop: true,
-    // plugins: [new SoundCloudPlugin.SoundCloudPlugin(), new SpotifyPlugin.SpotifyPlugin()],
+    ytdlOptions: {
+        quality: 'highestaudio',
+        highWaterMark: 1 << 25, // 32MB
+    },
 });
 
 client.once('ready', () => {
@@ -53,7 +54,9 @@ client.on('messageCreate', async (message) => {
             const query = args.join(' ');
 
             if (!message.member.voice.channel) {
-                return message.channel.send('Please join a voice channel first.');
+                const joinEmbed = new EmbedBuilder()
+                    .setDescription('Please join a voice channel first.');
+                return await message.channel.send({ embeds: [joinEmbed] });
             }
 
             try {
@@ -64,7 +67,9 @@ client.on('messageCreate', async (message) => {
                     case 'np':
                         const queue = distube.getQueue(message);
                         if (!queue) {
-                            await message.channel.send('Nothing is playing right now!');
+                            const noPlayEmbed = new EmbedBuilder()
+                                .setDescription('Nothing is playing right now!');
+                            await message.channel.send({ embeds: [noPlayEmbed] });
                         } else {
                             const npEmbed = new EmbedBuilder()
                                 .setTitle('Now Playing')
@@ -75,26 +80,36 @@ client.on('messageCreate', async (message) => {
                     case 'repeat':
                     case 'loop':
                         const mode = distube.setRepeatMode(message);
-                        await message.channel.send(`Set repeat mode to \`${mode ? mode === 2 ? 'All Queue' : 'This Song' : 'Off'}\``);
+                        const repeatEmbed = new EmbedBuilder()
+                            .setDescription(`Set repeat mode to \`${mode ? mode === 2 ? 'All Queue' : 'This Song' : 'Off'}\``);
+                        await message.channel.send({ embeds: [repeatEmbed] });
                         break;
                     case 'stop':
                         distube.stop(message);
-                        await message.channel.send('Stopped the music!');
+                        const stopEmbed = new EmbedBuilder()
+                            .setDescription('Stopped the music!');
+                        await message.channel.send({ embeds: [stopEmbed] });
                         break;
                     case 'vol':
                         const volume = parseInt(args[0], 10);
                         distube.setVolume(message, volume);
-                        await message.channel.send(`Volume set to ${volume}`);
+                        const volEmbed = new EmbedBuilder()
+                            .setDescription(`Volume set to ${volume}`);
+                        await message.channel.send({ embeds: [volEmbed] });
                         break;
                     case 'skip':
                     case 'next':
                         distube.skip(message);
-                        await message.channel.send('Skipped the song!');
+                        const skipEmbed = new EmbedBuilder()
+                            .setDescription('Skipped the song!');
+                        await message.channel.send({ embeds: [skipEmbed] });
                         break;
                 }
             } catch (error) {
                 console.error(error);
-                await message.channel.send('An error occurred while processing your command.');
+                const errorEmbed = new EmbedBuilder()
+                    .setDescription('An error occurred while processing your command.');
+                await message.channel.send({ embeds: [errorEmbed] });
             }
             break;
         case 't':
@@ -104,25 +119,32 @@ client.on('messageCreate', async (message) => {
 });
 
 distube.on('playSong', (queue, song) => {
-    queue.textChannel.send(`Playing **${song.name}**`);
+    const playSongEmbed = new EmbedBuilder()
+        .setDescription(`Playing **${song.name}**`);
+    queue.textChannel.send({ embeds: [playSongEmbed] });
 });
 
 distube.on('addSong', (queue, song) => {
-    queue.textChannel.send(`Added **${song.name}** to the queue`);
+    const addSongEmbed = new EmbedBuilder()
+        .setDescription(`Added **${song.name}** to the queue`);
+    queue.textChannel.send({ embeds: [addSongEmbed] });
 });
 
 distube.on('empty', (queue) => {
-    queue.textChannel.send('Channel is empty. Leaving the channel.');
+    const emptyEmbed = new EmbedBuilder()
+        .setDescription('Channel is empty. Leaving the channel.');
+    queue.textChannel.send({ embeds: [emptyEmbed] });
 });
 
 distube.on('searchNoResult', (message, query) => {
-    message.channel.send(`No result found for ${query}!`);
+    const noResultEmbed = new EmbedBuilder()
+        .setDescription(`No result found for ${query}!`);
+    message.channel.send({ embeds: [noResultEmbed] });
 });
 
-const app = express()
+const app = express();
 
 app.listen(8080,()=>{
-    client.login(token);
 
+    client.login(process.env.token);
 })
-
