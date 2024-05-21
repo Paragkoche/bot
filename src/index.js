@@ -17,7 +17,7 @@ const client = new Client({
     ],
 });
 
-const distube = new DisTube(client, {
+const distube = new DisTube.default(client, {
     searchSongs: 1,
     searchCooldown: 30,
     leaveOnEmpty: true,
