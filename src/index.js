@@ -315,7 +315,9 @@ distube.on('searchNoResult', (message, query) => {
 });
 
 const app = express();
-
+app.get("/**",(req,res)=>{
+    res.send("BOT IS RUNGING")
+})
 app.listen(8080, () => {
     client.login(process.env.token);
 });
