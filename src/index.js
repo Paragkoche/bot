@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, EmbedBuilder, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, EmbedBuilder, REST, Routes,Colors } from 'discord.js';
 import DisTube from 'distube';
 import express from "express";
 import * as dotenv from 'dotenv';
@@ -175,7 +175,7 @@ client.on('interactionCreate', async interaction => {
                 { name: '`/t <symbol>`', value: 'Get information for a specific symbol', inline: true }
             )
             .setFooter({ text: 'Bot created by YourName', iconURL: 'https://yourimageurl.com/logo.png' })
-            .setColor('BLUE')
+            .setColor(Colors.Blue)
             .setThumbnail('https://yourimageurl.com/help-icon.png');
 
         await interaction.reply({ embeds: [helpEmbed] });
@@ -275,7 +275,7 @@ client.on('interactionCreate', async interaction => {
             const animeEmbed = new EmbedBuilder()
                 .setTitle(`Random Anime Image (${category.toUpperCase()})`)
                 .setImage(animeImageUrl)
-                .setColor(category === 'sfw' ? 'BLUE' : 'RED');
+                .setColor(category === 'sfw' ? Colors.Blue : Colors.Red);
 
             await interaction.reply({ embeds: [animeEmbed] });
             break;
